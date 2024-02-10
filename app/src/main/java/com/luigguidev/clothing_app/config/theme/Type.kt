@@ -1,4 +1,4 @@
-package com.luigguidev.clothing_app.ui.theme
+package com.luigguidev.clothing_app.config.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
