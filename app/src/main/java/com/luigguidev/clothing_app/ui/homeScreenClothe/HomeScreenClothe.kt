@@ -1,6 +1,6 @@
 package com.luigguidev.clothing_app.ui.homeScreenClothe
 
-import androidx.compose.foundation.Image
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,14 +11,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,40 +31,85 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.luigguidev.clothing_app.R
-import com.luigguidev.clothing_app.config.theme.ClothingappTheme
+import com.luigguidev.clothing_app.config.navigation.CardViewModelState
+import com.luigguidev.clothing_app.config.navigation.ViewModelNavControllerState
+import com.luigguidev.clothing_app.viewmodel.CardScreenViewModel
+import com.luigguidev.clothing_app.viewmodel.ClotheScreenViewModel
 
 @Composable
-fun HomeScreenClothe() {
+fun HomeScreenClothe(
+//    clotheScreenViewModel: ClotheScreenViewModel,
+//    navController: NavHostController
+    viewModelNavControllerState: ViewModelNavControllerState,
+    cardViewModelState: CardViewModelState,
+    onClick: () -> Unit,
+    onClickCardNavigation: () -> Unit
+) {
 
     Scaffold(
         topBar = {
-            AppBar()
+            AppBar(
+                onClickCardNavigation = {
+                    onClickCardNavigation()
+                }
+            )
+        },
+        floatingActionButton = {
+            FloatingButton(
+                onClick = {
+                    onClick()
+                }
+            )
         }
+
     ) {
         BodySection(
             modifier = Modifier
                 .padding(it)
                 .padding(horizontal = 12.dp)
-                .fillMaxSize()
+                .fillMaxSize(),
+            clotheScreenViewModel = viewModelNavControllerState.clotheScreenViewModel,
+            cardScreenViewModel = cardViewModelState.cardScreenViewModel
+
         )
+    }
+}
+
+@Composable
+fun FloatingButton(
+    onClick: () -> Unit
+) {
+    FloatingActionButton(
+        onClick = {
+            onClick()
+        },
+    ) {
+        Icon(imageVector = Icons.Outlined.Add, contentDescription = null)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppBar() {
+private fun AppBar(
+    onClickCardNavigation: () -> Unit
+) {
     TopAppBar(
         title = {
             Column {
@@ -81,7 +129,9 @@ private fun AppBar() {
         },
         actions = {
             IconButton(
-                onClick = { /*TODO*/ },
+                onClick = {
+                    onClickCardNavigation()
+                },
             ) {
                 Icon(
                     imageVector = Icons.Outlined.ShoppingCart,
@@ -97,7 +147,9 @@ private fun AppBar() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BodySection(
-    modifier: Modifier
+    modifier: Modifier,
+    clotheScreenViewModel: ClotheScreenViewModel,
+    cardScreenViewModel: CardScreenViewModel
 ) {
     Column(
         modifier = modifier,
@@ -110,28 +162,43 @@ private fun BodySection(
             modifier = Modifier
         )
         ListClothesSection(
-            modifier = Modifier
+            modifier = Modifier,
+            clotheScreenViewModel = clotheScreenViewModel,
+            cardScreenViewModel = cardScreenViewModel
         )
     }
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ListClothesSection(
-    modifier: Modifier
+    modifier: Modifier,
+    clotheScreenViewModel: ClotheScreenViewModel,
+    cardScreenViewModel: CardScreenViewModel
 ) {
+
+    val clotheList by clotheScreenViewModel.clotheList.collectAsState()
+    val listState = rememberLazyGridState()
+    val painter = rememberAsyncImagePainter(model = R.drawable.noimage)
+
     LazyVerticalGrid(
+        state = listState,
         modifier = modifier,
         columns = GridCells.Fixed(2),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
+
         content = {
-            items(10) {
+            items(clotheList.size, key = { index ->
+                clotheList[index].id!!
+            }) { index ->
+                val clothe = clotheList[index]
+                val image = remember {
+                    Uri.parse(clothe.imagePath)
+                }
                 Card(
                     modifier = Modifier
                         .size(220.dp),
-                    onClick = { /*TODO*/ },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondary
                     )
@@ -144,19 +211,26 @@ private fun ListClothesSection(
                     ) {
                         Box(
                             modifier = Modifier
-                                .weight(1f),
+                                .weight(1f)
+                                .fillMaxWidth(),
                         ) {
-                            Image(
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(image)
+                                    .build(),
+                                placeholder = painter,
+                                contentDescription = "",
                                 modifier = Modifier
+                                    .fillMaxSize()
                                     .clip(
                                         RoundedCornerShape(
                                             bottomStart = 12.dp,
-                                            bottomEnd = 12.dp
+                                            bottomEnd = 12.dp,
+                                            topStart = 12.dp,
+                                            topEnd = 12.dp
                                         )
                                     ),
-                                painter = painterResource(id = R.drawable.polera3),
                                 contentScale = ContentScale.Crop,
-                                contentDescription = null
                             )
                             Card(
                                 modifier = Modifier
@@ -172,23 +246,27 @@ private fun ListClothesSection(
 
 
                             ) {
-                                Icon(
-                                    modifier = Modifier
-                                        .padding(8.dp),
-                                    imageVector = Icons.Outlined.ShoppingCart,
-                                    contentDescription = null
-                                )
+                                IconButton(onClick = {
+                                    cardScreenViewModel.addClotheToCard(clothe)
+                                }) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .padding(8.dp),
+                                        imageVector = Icons.Outlined.ShoppingCart,
+                                        contentDescription = null
+                                    )
+                                }
                             }
                         }
                         Text(
                             modifier = Modifier
                                 .padding(vertical = 4.dp),
-                            text = "Bomber Jackets",
+                            text = clothe.name,
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.tertiary
                         )
                         Text(
-                            text = "$/ 49.90",
+                            text = "S/. ${clothe.priceUnit}",
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -201,6 +279,7 @@ private fun ListClothesSection(
     )
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CategorySection(
@@ -209,7 +288,7 @@ private fun CategorySection(
     LazyRow(
         modifier = modifier
     ) {
-        items(10) {
+        items(5) {
             Card(
                 modifier = Modifier
                     .padding(end = 12.dp),
@@ -259,10 +338,3 @@ private fun SearchSection(
     )
 }
 
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-private fun PreviewHomeScreen() {
-    ClothingappTheme {
-        HomeScreenClothe()
-    }
-}

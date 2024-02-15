@@ -83,4 +83,15 @@ dependencies {
     val hiltVersion = "2.48.1"
     implementation("com.google.dagger:hilt-android:$hiltVersion")
     kapt("com.google.dagger:hilt-android-compiler:$hiltVersion")
+
+    //
+    implementation ("com.google.accompanist:accompanist-permissions:0.28.0")
+    val cameraxVersion = "1.3.0-rc01"
+    implementation ("androidx.camera:camera-camera2:${cameraxVersion}")
+    implementation ("androidx.camera:camera-lifecycle:${cameraxVersion}")
+    implementation ("androidx.camera:camera-view:${cameraxVersion}")
+
+    //coil
+    implementation ("io.coil-kt:coil-compose:2.4.0")
+
 }
