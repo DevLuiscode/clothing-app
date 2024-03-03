@@ -23,7 +23,7 @@ class AppModule {
         return Room.databaseBuilder(
             context = application,
             AppDatabase::class.java,
-            name = "clothing-store"
+            name = "clothing-store",
         ).build()
     }
 

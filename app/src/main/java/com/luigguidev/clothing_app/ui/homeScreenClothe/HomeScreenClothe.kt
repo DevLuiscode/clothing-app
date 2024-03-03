@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -177,25 +178,24 @@ private fun ListClothesSection(
     cardScreenViewModel: CardScreenViewModel
 ) {
 
-    val clotheList by clotheScreenViewModel.clotheList.collectAsState()
-    val listState = rememberLazyGridState()
+
+    val uiState = clotheScreenViewModel.uiState
     val painter = rememberAsyncImagePainter(model = R.drawable.noimage)
 
     LazyVerticalGrid(
-        state = listState,
         modifier = modifier,
         columns = GridCells.Fixed(2),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
 
         content = {
-            items(clotheList.size, key = { index ->
-                clotheList[index].id!!
-            }) { index ->
-                val clothe = clotheList[index]
-                val image = remember {
-                    Uri.parse(clothe.imagePath)
-                }
+            items(
+                items = uiState.clotheList,
+                key = {
+                    it.clotheModel.id!!
+                })
+            { clothe ->
+
                 Card(
                     modifier = Modifier
                         .size(220.dp),
@@ -216,7 +216,7 @@ private fun ListClothesSection(
                         ) {
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
-                                    .data(image)
+                                    .data(clothe.uri)
                                     .build(),
                                 placeholder = painter,
                                 contentDescription = "",
@@ -247,7 +247,7 @@ private fun ListClothesSection(
 
                             ) {
                                 IconButton(onClick = {
-                                    cardScreenViewModel.addClotheToCard(clothe)
+                                    cardScreenViewModel.addClotheToCard(clothe.clotheModel)
                                 }) {
                                     Icon(
                                         modifier = Modifier
@@ -261,12 +261,12 @@ private fun ListClothesSection(
                         Text(
                             modifier = Modifier
                                 .padding(vertical = 4.dp),
-                            text = clothe.name,
+                            text = clothe.clotheModel.name,
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.tertiary
                         )
                         Text(
-                            text = "S/. ${clothe.priceUnit}",
+                            text = "S/. ${clothe.clotheModel.priceUnit}",
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -275,6 +275,98 @@ private fun ListClothesSection(
 
                 }
             }
+
+            //Codigo anterior
+
+//            items(
+//                clotheList.size,
+//                key = { index ->
+//                clotheList[index].id!!
+//            })
+//            { index ->
+//                val clothe = clotheList[index]
+//                val image = remember {
+//                    Uri.parse(clothe.imagePath)
+//                }
+//                Card(
+//                    modifier = Modifier
+//                        .size(220.dp),
+//                    colors = CardDefaults.cardColors(
+//                        containerColor = MaterialTheme.colorScheme.secondary
+//                    )
+//                ) {
+//                    Column(
+//                        modifier = Modifier
+//                            .fillMaxSize()
+//                            .padding(bottom = 4.dp),
+//                        horizontalAlignment = Alignment.CenterHorizontally
+//                    ) {
+//                        Box(
+//                            modifier = Modifier
+//                                .weight(1f)
+//                                .fillMaxWidth(),
+//                        ) {
+//                            AsyncImage(
+//                                model = ImageRequest.Builder(LocalContext.current)
+//                                    .data(image)
+//                                    .build(),
+//                                placeholder = painter,
+//                                contentDescription = "",
+//                                modifier = Modifier
+//                                    .fillMaxSize()
+//                                    .clip(
+//                                        RoundedCornerShape(
+//                                            bottomStart = 12.dp,
+//                                            bottomEnd = 12.dp,
+//                                            topStart = 12.dp,
+//                                            topEnd = 12.dp
+//                                        )
+//                                    ),
+//                                contentScale = ContentScale.Crop,
+//                            )
+//                            Card(
+//                                modifier = Modifier
+//                                    .align(Alignment.BottomCenter)
+//                                    .padding(bottom = 4.dp),
+//                                shape = CircleShape,
+//                                colors = CardDefaults.cardColors(
+//                                    containerColor = MaterialTheme.colorScheme.primary,
+//                                ),
+//                                elevation = CardDefaults.cardElevation(
+//                                    defaultElevation = 20.dp
+//                                )
+//
+//
+//                            ) {
+//                                IconButton(onClick = {
+//                                    cardScreenViewModel.addClotheToCard(clothe)
+//                                }) {
+//                                    Icon(
+//                                        modifier = Modifier
+//                                            .padding(8.dp),
+//                                        imageVector = Icons.Outlined.ShoppingCart,
+//                                        contentDescription = null
+//                                    )
+//                                }
+//                            }
+//                        }
+//                        Text(
+//                            modifier = Modifier
+//                                .padding(vertical = 4.dp),
+//                            text = clothe.name,
+//                            fontSize = 13.sp,
+//                            color = MaterialTheme.colorScheme.tertiary
+//                        )
+//                        Text(
+//                            text = "S/. ${clothe.priceUnit}",
+//                            color = MaterialTheme.colorScheme.primary,
+//                            fontWeight = FontWeight.SemiBold
+//                        )
+//                    }
+//
+//
+//                }
+//            }
         }
     )
 }

@@ -1,9 +1,11 @@
 package com.luigguidev.clothing_app.viewmodel
 
-import android.util.Log
+import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.luigguidev.clothing_app.model.local.entity.ClotheEntity
 import com.luigguidev.clothing_app.model.local.model.ClotheModel
 import com.luigguidev.clothing_app.model.repositories.ClotheRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +19,10 @@ class ClotheScreenViewModel @Inject constructor(
     private val clotheRepository: ClotheRepository
 ) : ViewModel() {
 
+    var uiState by mutableStateOf(ClotheScreenUiState())
+        private set
+
+
     private val _initNameClothe = ""
     private val _initDescription = ""
     private val _initPriceHigher = ""
@@ -24,8 +30,7 @@ class ClotheScreenViewModel @Inject constructor(
     private val _initImage = ""
     private val _initBtn = false
 
-    private val _clotheList = MutableStateFlow<List<ClotheModel>>(emptyList())
-    val clotheList = _clotheList.asStateFlow()
+
 
     private val _name = MutableStateFlow(_initNameClothe)
     val nameClothe = _name.asStateFlow()
@@ -42,8 +47,15 @@ class ClotheScreenViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            clotheRepository.getAllClothe().collect {
-                _clotheList.value = it
+            clotheRepository.getAllClothe().collect { clotheDataList ->
+                uiState = ClotheScreenUiState(
+                    clotheList = clotheDataList.map {
+                        ClotheItemUiState(
+                            uri = Uri.parse(it.imagePath),
+                            clotheModel = it
+                        )
+                    }
+                )
             }
         }
     }
